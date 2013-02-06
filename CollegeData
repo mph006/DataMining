@@ -1,0 +1,180 @@
+
+
+#Reading in the CSV file with appropriate column values
+
+UnivData <- read.csv("FormattedUnivData.csv", header = F, 
+                     col.names=c("UniversityName", "State", "Location", "Control", 
+                                 "NumberOfStudents", "Male:Female", "Student:Faculty", 
+                                 "SATVerbal", "SATMath", "Expenses", "PctFiniancialAid", 
+                                 "NumberofApplicants", "PctAdmittance","PctEnrolled", 
+                                 "Academics", "Social", "QualityofLife"), row.names = NULL)
+
+#Instantiating needed variables to be assigned later
+descControl<-c()
+descLocation<-c()
+north<-0
+south<-0
+northqolsum<-0
+southqolsum<-0
+northacadsum<-0
+southacadsum<-0
+northsocsum<-0
+southsocsum<-0
+state<-0
+private<-0
+stateqolsum<-0
+privateqolsum<-0
+stateacadsum<-0
+privateacadsum<-0
+statesocsum<-0
+privatesocsum<-0
+
+#Doing some automated data preprocessing and descretization of variables based on conditionals
+for (i in 1:length (UnivData$SATVerbal)){
+  
+#Preprocessing (Smoothing) SAT scores based on the average score for 1988 found here : http://www.infoplease.com/ipa/A0883611.html
+  if(UnivData$SATVerbal[i] == 0){
+    UnivData$SATVerbal[i]=505
+  }
+ if(UnivData$SATMath[i] == 0){
+    UnivData$SATMath[i]=501
+  }
+    
+#Descritizing control data, 1 = State/public, 0 = private
+ if(UnivData$Control[i] == 'state' | UnivData$Control[i] == 'STATE'| UnivData$Control[i] == 'public'| UnivData$Control[i] == 'city'){
+    descControl<-c(descControl,1)
+ }
+  if(UnivData$Control[i] =='private' | UnivData$Control[i] =='PRIVATE'){
+    descControl<-c(descControl,0)
+ }
+    
+#Descritizing location data, 1 = north/foregin, 0 = south
+ if(UnivData$State[i] =='Colorado'|UnivData$State[i] =='Connecticut'|UnivData$State[i] =='Illinois'|UnivData$State[i] =='Indiana'|UnivData$State[i] =='Kansas'|UnivData$State[i] =='Maine'|UnivData$State[i] =='Massachusetts'|UnivData$State[i] =='Michigan'|UnivData$State[i] =='Minnesota'|UnivData$State[i] =='Missouri'|UnivData$State[i] =='Montana'|UnivData$State[i] =='New Hampshire'|UnivData$State[i] =='New Jersey'|UnivData$State[i] =='New York'|UnivData$State[i] =='Ohio'|UnivData$State[i] =='Oregon'|UnivData$State[i] =='Pennsylvania'|UnivData$State[i] =='South Dakota'|UnivData$State[i] =='Rhode Island'|UnivData$State[i] =='Vermont'|UnivData$State[i] =='Washington'|UnivData$State[i] =='Foreign'){
+    descLocation<-c(descLocation,1)
+ }
+  if(UnivData$State[i] =='Alabama'|UnivData$State[i] =='Arizona'|UnivData$State[i] =='California'| UnivData$State[i] =='DC'|UnivData$State[i] =='Louisiana'|UnivData$State[i] =='Florida'|UnivData$State[i] =='Georgia'|UnivData$State[i] =='Maryland'|UnivData$State[i] =='North Carolina'|UnivData$State[i] =='Oklahoma'|UnivData$State[i] =='Tennessee'|UnivData$State[i] =='Texas'|UnivData$State[i] =='Virginia'){
+    descLocation<-c(descLocation,0)
+ }
+}
+  
+#Doing summations on the 3 self reported variables (Quality of Life, Social, and Academic) based binary attributes (control, location) 
+#Being lazy with the for loop's bounds because we will always iterate over every record for all calculations
+ for(j in 1:length(UnivData$SATVerbal)){
+
+#Location summations for big three varaibles
+  if(descLocation[j] == 1){
+   north = north + 1;
+   northqolsum = northqolsum + UnivData$QualityofLife[j]
+   northacadsum = northacadsum + UnivData$Academics[j]
+   northsocsum = northsocsum + UnivData$Social[j]
+ }
+ else{
+   south = south + 1;
+   southqolsum = southqolsum + UnivData$QualityofLife[j]
+   southacadsum = southacadsum + UnivData$Academics[j]
+   southsocsum = southsocsum + UnivData$Social[j]
+ }
+   
+#Control Summations for big three variables
+ if(descControl[j] == 1){
+   state = state + 1;
+   stateqolsum = stateqolsum + UnivData$QualityofLife[j]
+   stateacadsum = stateacadsum + UnivData$Academics[j]
+   statesocsum = statesocsum + UnivData$Social[j]
+ }
+ else{
+   private = private + 1;
+   privateqolsum = privateqolsum + UnivData$QualityofLife[j]
+   privateacadsum = privateacadsum + UnivData$Academics[j]
+   privatesocsum = privatesocsum + UnivData$Social[j]
+ }
+}
+   
+#Calculated averages based on control and location for the 3 self reported values  
+stateQOLavg = stateqolsum/state
+privateQOLavg = privateqolsum/private
+stateAcadavg = stateacadsum/state
+privateAcadavg = privateacadsum/private
+stateSocavg = statesocsum/state
+privateSocavg = privatesocsum/private
+northQOLavg = northqolsum/north
+southQOLavg = southqolsum/south
+northAcadavg = northacadsum/north
+southAcadavg = southacadsum/south
+northSocavg = northsocsum/north
+southSocavg = southsocsum/south
+ 
+#General averages of numeric attributes  
+AcadAvg<-mean(UnivData$Academics)
+SocAvg<-mean(UnivData$Social)
+QoLAvg<-mean(UnivData$QualityofLife)
+NumStudentsAvg<- mean(UnivData$NumberOfStudents)
+ExpenseAvg<- mean(UnivData$Expenses)
+SATMathAvg<-mean(UnivData$SATMath)
+SATVerbalAvg<-mean(UnivData$SATVerbal) 
+ 
+#Basic correlations between listed numeric attributes
+corMathAcad<-cor(UnivData$SATMath, UnivData$Academics)
+corMathSocial<-cor(UnivData$SATMath, UnivData$Social)
+corMathQoL<-cor(UnivData$SATMath, UnivData$QualityofLife)
+corAcadQoL<-cor(UnivData$Academics, UnivData$QualityofLife)
+corSocQoL<-cor(UnivData$Social, UnivData$QualityofLife)
+corAcadSocial<-cor(UnivData$Academics, UnivData$Social)
+
+  
+#Summing math and verbal SAT scores for each record (out of 1600)
+SATTemp<-c()
+for (i in 1:length (UnivData$SATVerbal)){
+  SATTemp<-c(SATTemp, UnivData$SATVerbal[i]+UnivData$SATMath[i])
+}
+
+#Normalization function pulled from prior homework, needed for consistent values for hirearchial clustering 
+minmax <- function(x, min, max) {
+  if(missing(min))
+    min=0
+  if(missing(max))
+    max = 1
+  mina = min(x)
+  maxa = max(x)
+  returnVector<-c(((x-mina)/(maxa-mina))*(max-min)+min)
+}
+  
+#Hirearchial Clustering Normilization (Academics)
+normSATTemp<-minmax(SATTemp)
+normAcademics<-minmax(UnivData$Academics)
+normStudenttoProf<-minmax(UnivData$Student.Faculty)
+normOverallAcademics<-(normAcademics+normSATTemp+normStudenttoProf)/3
+
+#Hierarchial Clustering Normilization (Social)
+normNumStudents<-minmax(UnivData$NumberOfStudents)
+normSocial<-minmax(UnivData$Social)
+normMtoF<-minmax(UnivData$Male.Female)
+normOverallSocial<-(normNumStudents+normSocial+normMtoF)/3
+    
+#Generating new data frame to work with isolated values
+NormalizedResults<-cbind(normOverallAcademics,normOverallSocial)
+colnames(NormalizedResults)<- c("NormalizedAcademics","NormalizedSocial")
+
+#Generating the euclidean distances of all xy pairs, plotting all xy pairs
+distance<- dist(NormalizedResults)
+fit<-hclust(distance)
+plot(normOverallAcademics, normOverallSocial)
+
+#Generating a dendrogram with 20 cluster partitions with the cutree function
+plot(fit, main= "Normalized Social & Academic Clusters", xlab = "Schools", ylab = "Similarity",labels = FALSE)#UnivData$UniversityName)
+groups<-cutree(fit,k=20)
+rect.hclust(fit,k=20,border="red")
+  
+#Appending results of cluster analysis to the new data frame
+NormalizedResults<-data.frame(NormalizedResults,groups, UnivData$UniversityName)
+NormalizedResults<-NormalizedResults[order(NormalizedResults$groups),]
+  
+#3D Scatterplot of SAT Math, SAT Verbal, and Male:Female ratio
+install.packages("scatterplot3d")
+satmale3d <-scatterplot3d(UnivData$SATMath, UnivData$SATVerbal, UnivData$Male.Female, pch = 16, highlight.3d = TRUE, type = "h")
+fit <- lm(UnivData$Male.Female ~ UnivData$SATMath + UnivData$SATVerbal) 
+satmale3d$plane3d(fit)
+
+#Correlations between expenses and normalized ratings
+cor(UnivData$Expenses, normOverallAcademics)
+cor(UnivData$Expenses, normOverallSocial)
