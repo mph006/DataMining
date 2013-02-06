@@ -1,5 +1,5 @@
-
-
+# Matt Herman & Charlie Fredrick, Data mining final project.
+# Using a self reported data set of collegiate rankings from 1988, we hope to analyze similarities between universities to give college bound high school seniors a broader range of schools to consider.
 #Reading in the CSV file with appropriate column values
 
 UnivData <- read.csv("FormattedUnivData.csv", header = F, 
